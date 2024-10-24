@@ -1,4 +1,5 @@
 import pytest
+import os
 from app import create_app
 from couchbase.cluster import Cluster
 from couchbase.auth import PasswordAuthenticator
@@ -32,11 +33,16 @@ def couchbase_setup(app):
     # Cleanup after tests
     collection.remove('test_doc')
 
+def is_env_vars_not_configured():
+    return os.getenv('COUCHBASE_CONNECTION_STRING') is None or os.getenv('COUCHBASE_USERNAME') is None or os.getenv('COUCHBASE_PASSWORD') is None or os.getenv('COUCHBASE_DEFAULT_BUCKET') is None
+
+@pytest.mark.skipif(is_env_vars_not_configured(), reason = "Skipping as environment variables are not configured")
 def test_index(client):
     response = client.get("/")
     assert response.status_code == 200
     assert b"Welcome to Couchbase Flask Starter Kit" in response.data
 
+@pytest.mark.skipif(is_env_vars_not_configured(), reason = "Skipping as environment variables are not configured")
 def test_create_and_get_document(client, couchbase_setup):
     # Create a document
     create_response = client.post("/documents", json={"id": "test_doc", "content": "Test content"})
